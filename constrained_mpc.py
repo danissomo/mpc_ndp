@@ -1,4 +1,5 @@
 #!/usr/bin/python3 
+import csv
 import rtde_control
 import rtde_receive
 import rtde_io
@@ -6,7 +7,7 @@ import time
 import math
 from copy import deepcopy
 from planner import trajectPlanner, rtde_kinematic
-
+import moveJ_from_csv  as csv_ur
 import numpy as np
 import random
 UR_IP = "127.0.0.1"
@@ -192,18 +193,22 @@ if __name__ == '__main__':
     start = time.time()
     rtde_c = rtde_control.RTDEControlInterface(UR_IP)
     rtde_r = rtde_receive.RTDEReceiveInterface(UR_IP)
-    rtde_c.moveJ([3, -0.7235987755982991, -2.617993877991494, 0, 3.14/2, 0])
+    rtde_c.moveJ([1.602055311203003, -2.8690412680255335, 2.6830248832702637, -2.869070831929342, -1.5840452353106897, -0.0009949843036096695], 0.1)
     #rnd = [-(random.random()*100%20)/100 -0.3, (random.random()*100%20)/100-0.2, (random.random()*100%50)/100+0.2, 0, -math.pi/2, 0]
-
+    
+    csv_ur.moveJ_from_scv_f(rtde_c, "ndp.out.txt")
     
      #hardcoded 1 point
     point1 = rtde_r.getActualTCPPose()
     point2 =  point1.copy()
-    point2 =[-0.5, 0, 0.5]
-    point2.append(0)
-    point2.append(-math.pi/2)
-    point2.append(0)
-
+    point2 =[0.02779895802090566, -0.6003423098739182, 0.5180805481436014, -0.15059444809490485, -2.217569120591045, 2.069619874084297]
+    # point2.append(0)
+    # point2.append(-math.pi/2)
+    # point2.append(0)
+    print("start mpc? y/n")
+    ans = input()
+    if ans != "y":
+        exit()
     v, kg, theta, theta_tar = mpc_get_speedJ(point1, point2)    
     #print_results(kg, theta, theta_tar)
 
