@@ -126,12 +126,12 @@ def check_constraints(v, v_max):
     return(key_gain)
 
 
-def mpc_get_speedJ(point1,  point2):
+def mpc_get_speedJ(rtde_c, point1,  point2):
     tp = trajectPlanner(debug=False)
     cart_a = tp.a_PointToPoint(point1, point2)
 
     ik = rtde_kinematic(rtde_c, debug=False)
-    theta_tar = ik.get_joint_pose(cart_a, rtde_r.getActualQ())
+    theta_tar = ik.get_joint_pose(cart_a, point1)
 
     # initialization
     v = []
@@ -174,7 +174,11 @@ def mpc_get_speedJ(point1,  point2):
         kg.append( check_constraints(v[1], deepcopy(v_max_i)) ) 
 
     stop = time.time()
-    return v, kg, theta, theta_tar
+    return v, kg, theta
+
+def get_mpc_q(rtde_c, point1, point2):
+    v, kg, theta = mpc_get_speedJ(rtde_c, point1, point2)
+    return theta
 
 def print_results(kg, theta, theta_tar):
     n = len(theta_tar)
@@ -209,7 +213,7 @@ if __name__ == '__main__':
     ans = input()
     if ans != "y":
         exit()
-    v, kg, theta, theta_tar = mpc_get_speedJ(point1, point2)    
+    v, kg, theta = mpc_get_speedJ( rtde_c,point1, point2)    
     #print_results(kg, theta, theta_tar)
 
     for com in v:
