@@ -13,7 +13,7 @@ class trajectPlanner(object):
         for i in range(3):
             l+= (point2[i] - point1[i])*(point2[i] - point1[i])
         l = math.sqrt(l)
-        print(l/max_speed)
+        #print(l/max_speed)
         return math.ceil(l/max_speed)
 
 
@@ -72,7 +72,7 @@ class rtde_kinematic:
         for i in range(1,len(cart)):
             q =self.rtde_c.getInverseKinematics(cart[i], result[i-1])
             if not q: 
-                print("Error: Find ik solve")
+                print("Error: can't find ik solve")
                 exit()
             result.append(q)
 
@@ -81,5 +81,4 @@ class rtde_kinematic:
             print(cart)
             print(result)
         return result
-        
     
