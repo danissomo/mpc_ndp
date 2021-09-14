@@ -81,5 +81,4 @@ class rtde_kinematic:
             print(cart)
             print(result)
         return result
-        
     
