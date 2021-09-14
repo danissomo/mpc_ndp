@@ -82,3 +82,27 @@ class rtde_kinematic:
             print(result)
         return result
     
+    def interpolation(self, point1, point2):
+        n = trajectPlanner.calc_point_c(trajectPlanner(), point1, point2)
+        ik_point1 = self.rtde_c.getInverseKinematics(point1)
+        ik_point2 = self.rtde_c.getInverseKinematics(point2)
+        result = []
+        for  i in range(n):
+            result.append(self.__param_line(ik_point1, ik_point2, i/(n-1)))
+        return result
+
+    def __param_line(self, point1, point2, t):
+        result = []
+        # a = (point2[0]-point1[0])/(math.cosh(1)-1)
+        # b = (point2[1]-point1[1])/(math.sinh(1))
+        # result.append(a*math.cosh(t)-a+point1[0])
+        # result.append(b*math.sinh(t)+point1[1])
+        for i in range(len(point1)):
+            result.append(point1[i]+(point2[i]-point1[i])*t)
+
+        if self.debug:
+            print(self.__param_line)
+            print(t)
+            print(result)
+            print()
+        return result

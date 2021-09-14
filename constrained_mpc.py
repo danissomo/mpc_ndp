@@ -148,7 +148,8 @@ if __name__ == '__main__':
     cart_a = tp.a_PointToPoint(point1, point2)
 
     ik = rtde_kinematic(rtde_c, debug=False)
-    theta_tar = ik.get_joint_pose(cart_a, point1)
+    #theta_tar = ik.get_joint_pose(cart_a, point1)
+    theta_tar = ik.interpolation(point1, point2)
     mpc = Mpc()
     v = mpc.get_speedJ(theta_tar)
         
