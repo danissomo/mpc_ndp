@@ -1,8 +1,8 @@
 #!/usr/bin/python3 
 import csv
+import logging
 import rtde_control
 import rtde_receive
-import rtde_io
 import time
 import math
 from copy import deepcopy
@@ -10,6 +10,7 @@ from planner import trajectPlanner, rtde_kinematic
 import moveJ_from_csv  as csv_ur
 import numpy as np
 import random
+from robot import UR5_robot
 UR_IP = "127.0.0.1"
 
 
@@ -129,45 +130,28 @@ def print_results(kg, theta, theta_tar):
 if __name__ == '__main__':
     
     start = time.time()
-    rtde_c = rtde_control.RTDEControlInterface(UR_IP)
-    rtde_r = rtde_receive.RTDEReceiveInterface(UR_IP)
-    rtde_c.moveJ([1.602055311203003, -2.8690412680255335, 2.6830248832702637, -2.869070831929342, -1.5840452353106897, -0.0009949843036096695], 1)
-    #rnd = [-(random.random()*100%20)/100 -0.3, (random.random()*100%20)/100-0.2, (random.random()*100%50)/100+0.2, 0, -math.pi/2, 0]
+    ur5 = UR5_robot(log_level=logging.DEBUG, log_file=False)
+    ur5.connect()
+    ur5.moveJ([1.602055311203003, -2.8690412680255335, 2.6830248832702637, -2.869070831929342, -1.5840452353106897, -0.0009949843036096695], 1, 1)
     
-    csv_ur.moveJ_from_scv_f(rtde_c, "ndp.out.txt")
-    
-     #hardcoded 1 point
-    point1 = rtde_r.getActualTCPPose()
+    t = csv_ur.moveJ_from_scv_f("ndp.out.txt")
+    point1 = ur5.rtde_c.getForwardKinematics(t[-1][0:6], [0,0,0,0,0,0])
     point2 =[0.02779895802090566, -0.6003423098739182, 0.5180805481436014, -0.15059444809490485, -2.217569120591045, 2.069619874084297]
+    theta_a = ur5.precalc_traject(point1, point2)
+    mpc = Mpc()
+    v = mpc.get_speedJ(theta_a)
+    
 
-    print("start mpc? y/n")
+    print("start? y/n")
     ans = input()
     if ans != "y":
         exit()
-    tp = trajectPlanner(debug=False)
-    cart_a = tp.a_PointToPoint(point1, point2)
-
-    ik = rtde_kinematic(rtde_c, debug=False)
-    theta_tar = ik.get_joint_pose(cart_a, point1)
-    mpc = Mpc()
-    v = mpc.get_speedJ(theta_tar)
-        
-    #print_results(kg, theta, theta_tar)
-
-    for com in v:
-        t_start = time.time()
-        rtde_c.speedJ(com, 5, mpc.dt)
-        if time.time() - t_start < mpc.dt: 
-            time.sleep(mpc.dt - (time.time()-t_start))
-    rtde_c.speedStop(10.0)
+    ur5.exec_a_moveJ(t)
+    ur5.exec_a_speedJ(v, mpc.dt)
     
-    print()
-    print("start pose ", point1)
-    print("target pose ", point2)
-    print("actual pose ", rtde_r.getActualTCPPose())
-
-    pose_error = []
-    for i in range(len(point2)):
-        pose_error.append(point2[i]-rtde_r.getActualTCPPose()[i])
-    print("pose error ", pose_error)
+    pose_error = np.abs(np.array(point2) - ur5.getCart())
+    logging.info("start pos  %s", point1)
+    logging.info("target pos %s", point2)
+    logging.info("actual pos %s", ur5.getCart())
+    logging.info("pos error  %s", pose_error)
   
